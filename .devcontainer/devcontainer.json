@@ -1,0 +1,39 @@
+{
+  "name": "Audentity Runner",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  // git: adds/updates the git CLI + openssh-client, required for
+  //      VS Code's automatic .gitconfig copy and SSH agent forwarding to work.
+  // docker-outside-of-docker: gives the container access to the HOST's Docker
+  //      daemon, so `docker compose` commands (used by setup_playit.py and
+  //      audentity.py) control the real Minecraft/Playit stack, not a nested
+  //      Docker-in-Docker sandbox.
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": true
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "moby": true
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "vscode",
+      "installZsh": false
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}
