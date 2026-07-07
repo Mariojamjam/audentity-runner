@@ -1,1 +1,5 @@
 .env
+.audentity/
+server/data/
+__pycache__/
+*.pyc

@@ -1,0 +1,25 @@
+services:
+  minecraft:
+    image: itzg/minecraft-server
+    container_name: minecraft-server
+    env_file:
+      - ../.env
+    ports:
+      - "25565:25565"
+      - "25575:25575"
+    volumes:
+      # Alternativa fora do repo: D:/minecraft-data:/data
+      - ./data:/data
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  playit:
+    image: ghcr.io/playit-cloud/playit-agent:0.17
+    container_name: playit-agent
+    restart: unless-stopped
+    network_mode: "service:minecraft"
+    depends_on:
+      - minecraft
+    environment:
+      - SECRET_KEY=${PLAYIT_SECRET_KEY}
