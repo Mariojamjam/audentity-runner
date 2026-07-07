@@ -188,6 +188,8 @@ copy only:
 abc123
 ```
 
+Save your Playit secret key immediately. Playit only shows the SECRET_KEY once, right after you create the agent. If you lose it, there is no way to retrieve it again — you'll need to delete the agent and create a new one (which also breaks any existing tunnel tied to it). Copy the key into .env as PLAYIT_SECRET_KEY before doing anything else.
+
 ### 6. Run the Playit setup script
 
 From the project root:
