@@ -24,12 +24,14 @@ Repository structure:
 ```text
 server-runner-bot/
 |- bot/                  Python bot code
+|- panel/                Terminal admin panel package
 |- server/
 |  |- data/              Persistent Minecraft data
 |  `- docker-compose.yml Docker stack
 |- .env                  Runtime configuration
 |- .env.example          Documented environment template
 |- requirements.txt      Python dependencies
+|- admin_panel.py        Terminal admin panel entrypoint
 |- runner.py             Discord bot entrypoint
 |- setup_playit.py       Playit setup helper
 |- audentity.py          All-up / all-down automation
@@ -130,7 +132,7 @@ Important:
 
 - `DISCORD_TOKEN` must be real.
 - `PLAYIT_SECRET_KEY` can be empty before the first Playit setup.
-- `PLAYIT_TUNNEL_ADDRESS` can stay empty. It is optional because the bot first tries to read the Playit address dynamically from the running Playit container. This variable is only a manual fallback.
+- `PLAYIT_TUNNEL_ADDRESS` should be filled in step 9 with the public address shown in Playit's `Tunnels` tab.
 - `ONLINE_MODE=FALSE` is the default in this project, which allows offline/cracked Minecraft clients.
 - `ENABLE_RCON` must stay `true`.
 - `RCON_PASSWORD` should be changed.
@@ -188,7 +190,7 @@ copy only:
 abc123
 ```
 
-Save your Playit secret key immediately. Playit only shows the SECRET_KEY once, right after you create the agent. If you lose it, there is no way to retrieve it again — you'll need to delete the agent and create a new one (which also breaks any existing tunnel tied to it). Copy the key into .env as PLAYIT_SECRET_KEY before doing anything else.
+Save your Playit secret key immediately. Playit only shows the `SECRET_KEY` once, right after you create the agent. If you lose it, there is no way to retrieve it again, so you will need to delete the agent and create a new one, which also breaks any existing tunnel tied to it. Copy the key into `.env` as `PLAYIT_SECRET_KEY` before doing anything else.
 
 ### 6. Run the Playit setup script
 
@@ -253,15 +255,11 @@ After saving the tunnel:
 4. Copy the public address shown there
 5. That is the address players should use
 
-Optional:
-
-Save it in `.env` as a fallback:
+Update `.env` with the public address from Playit's `Tunnels` tab:
 
 ```env
 PLAYIT_TUNNEL_ADDRESS=your-address.playit.gg
 ```
-
-This is optional because the bot can usually read the public address directly from the running Playit agent. Keeping it in `.env` is only useful as a manual fallback.
 
 ### 10. Verify the tunnel
 
@@ -351,6 +349,34 @@ You want both:
 - `minecraft-server`
 - `playit-agent`
 
+## Terminal Admin Panel
+
+The project also includes a local terminal admin panel built with Textual.
+
+Run it from the project root:
+
+```bash
+python admin_panel.py
+```
+
+What it gives you:
+
+- `Dashboard`: stack status, uptime, player count, public address, and quick actions
+- `Players`: inspect online players and send kick, ban, message, op, and whitelist actions
+- `Console`: send raw Minecraft commands over RCON with command history and simple autocomplete
+- `Logs`: watch live server logs with category filters and search
+
+Keyboard shortcuts:
+
+- `1` to `4`: switch tabs
+- `Tab` and `Shift+Tab`: move between tabs
+- `S`: start the stack
+- `T`: stop the stack
+- `R`: restart the stack
+- `Q`: quit the panel
+
+The panel uses the same `.env`, Docker stack, RCON connection, and Playit settings as the Discord bot. It can be used alongside `runner.py` and `python audentity all-up`.
+
 ## Discord Test
 
 After everything is up, test:
@@ -395,11 +421,16 @@ Basic mod workflow:
 - `.env.example`: documented environment template
 - `server/docker-compose.yml`: Docker services for Minecraft and Playit
 - `server/data`: persistent Minecraft files
+- `server/playit-data`: persistent Playit agent state
+- `server/backups`: zip backups created from the terminal admin panel
 - `setup_playit.py`: one-time or repeated Playit setup helper
 - `runner.py`: bot entrypoint for direct execution
+- `admin_panel.py`: Textual terminal admin panel entrypoint
+- `panel/`: terminal admin panel package
 - `audentity.py`: automated all-up / all-down entrypoint
 - `.audentity/bot.pid`: tracked PID for the background bot process
 - `.audentity/bot.log`: bot output log for background runs
+- `.audentity/panel_audit.log`: audit trail for admin panel actions
 
 ## Where Minecraft Data Is Stored
 
@@ -446,6 +477,6 @@ volumes:
 
 ## Notes
 
-- The bot tries to read the public Playit address dynamically from the Playit container.
-- If that fails, it falls back to `PLAYIT_TUNNEL_ADDRESS`.
+- Set `PLAYIT_TUNNEL_ADDRESS` to the public address shown in Playit's `Tunnels` tab after you create the tunnel.
+- The bot and terminal panel can still fall back to the running Playit agent when needed.
 - The Playit container shares the Minecraft container network namespace with `network_mode: "service:minecraft"`.
