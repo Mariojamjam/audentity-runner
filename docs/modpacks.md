@@ -348,7 +348,7 @@ LEVEL=pack-validation-1
 Check:
 
 ```bash
-docker compose --env-file .env -f server/docker-compose.yml logs --tail=200 minecraft
+docker compose --env-file .env -f docker-compose.yml logs --tail=200 minecraft
 ```
 
 ### CurseForge says the API key is invalid
@@ -388,6 +388,6 @@ Use different `LEVEL` values so each pack can have its own world folder.
 ## Related Files
 
 - [.env.example](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/.env.example:1)
-- [server/docker-compose.yml](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/server/docker-compose.yml:1)
+- [docker-compose.yml](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/docker-compose.yml:1)
 - [server/modpacks](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/server/modpacks:1)
 - [server/data](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/server/data:1)

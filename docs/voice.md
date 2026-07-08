@@ -112,7 +112,7 @@ Restart the stack after:
 Useful check:
 
 ```bash
-docker compose --env-file .env -f server/docker-compose.yml logs --tail=100 minecraft
+docker compose --env-file .env -f docker-compose.yml logs --tail=100 minecraft
 ```
 
 Look for a log line indicating that the voice chat server started on the configured port.

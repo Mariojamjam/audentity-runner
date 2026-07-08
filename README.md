@@ -14,8 +14,8 @@ This project has 3 runtime pieces:
    Runs the actual Minecraft server with the `itzg/minecraft-server` image.
 2. `playit-agent`
    Creates the public tunnel so players can connect without manual port forwarding.
-3. `runner.py`
-   Starts the Discord bot that controls the stack and sends RCON commands.
+3. `audentity-bot`
+   Runs `runner.py` inside Docker and controls the stack through the Docker engine.
 
 <br>
 
@@ -29,12 +29,12 @@ server-runner-bot/
 |- server/
 |  |- data/              Persistent Minecraft data
 |  |- modpacks/          Private/exported modpack files
-|  `- docker-compose.yml Docker stack
 |- .env                  Runtime configuration
 |- .env.example          Documented environment template
+|- docker-compose.yml    Docker stack
 |- requirements.txt      Python dependencies
 |- admin_panel.py        Terminal admin panel entrypoint
-|- runner.py             Discord bot entrypoint
+|- runner.py             Discord bot entrypoint used by the bot container
 |- setup_playit.py       Playit setup helper
 |- audentity.py          All-up / all-down automation
 `- audentity             Extensionless launcher for `python audentity ...`
@@ -135,6 +135,7 @@ Important:
 - `DISCORD_TOKEN` must be real.
 - `PLAYIT_SECRET_KEY` can be empty before the first Playit setup.
 - `PLAYIT_TUNNEL_ADDRESS` should be filled in step 9 with the public address shown in Playit's `Tunnels` tab.
+- `RCON_HOST=127.0.0.1` is correct for the local admin panel. The Dockerized bot overrides this internally to `minecraft`.
 - `ONLINE_MODE=FALSE` is the default in this project, which allows offline/cracked Minecraft clients.
 - `ENABLE_RCON` must stay `true`.
 - `RCON_PASSWORD` should be changed.
@@ -221,7 +222,7 @@ After the script runs, you want logs like:
 Manual check:
 
 ```bash
-docker compose --env-file .env -f server/docker-compose.yml logs -f playit
+docker compose --env-file .env -f docker-compose.yml logs -f playit
 ```
 
 ### 8. Create the Playit tunnel
@@ -268,7 +269,7 @@ PLAYIT_TUNNEL_ADDRESS=your-address.playit.gg
 Check the logs:
 
 ```bash
-docker compose --env-file .env -f server/docker-compose.yml logs --tail=100 playit
+docker compose --env-file .env -f docker-compose.yml logs --tail=100 playit
 ```
 
 Healthy signs:
@@ -304,9 +305,7 @@ python audentity.py all-up
 What it does:
 
 1. Starts the Docker stack with `docker compose up -d`
-2. Starts the Discord bot in the background
-3. Stores the bot PID in `.audentity/bot.pid`
-4. Writes bot logs to `.audentity/bot.log`
+2. Starts the Dockerized Discord bot service
 
 ### Stop everything
 
@@ -322,34 +321,33 @@ python audentity.py all-down
 
 What it does:
 
-1. Stops the tracked background bot process
-2. Stops the Docker stack with `docker compose down`
+1. Stops the Docker stack with `docker compose down`
 
 ### Manual fallback
 
 If needed, you can still run the pieces manually:
 
 ```bash
-docker compose --env-file .env -f server/docker-compose.yml up -d
-python runner.py
+docker compose --env-file .env -f docker-compose.yml up -d
 ```
 
 and stop the stack with:
 
 ```bash
-docker compose --env-file .env -f server/docker-compose.yml down
+docker compose --env-file .env -f docker-compose.yml down
 ```
 
 ### Check the stack
 
 ```bash
-docker compose --env-file .env -f server/docker-compose.yml ps
+docker compose --env-file .env -f docker-compose.yml ps
 ```
 
 You want both:
 
 - `minecraft-server`
 - `playit-agent`
+- `audentity-bot`
 
 ## Terminal Admin Panel
 
@@ -377,7 +375,7 @@ Keyboard shortcuts:
 - `R`: restart the stack
 - `Q`: quit the panel
 
-The panel uses the same `.env`, Docker stack, RCON connection, and Playit settings as the Discord bot. It can be used alongside `runner.py` and `python audentity all-up`.
+The panel uses the same `.env`, Docker stack, RCON connection, and Playit settings as the Discord bot. The panel itself stays local on the host, while the bot runs as a Docker service.
 
 ## Discord Test
 
@@ -479,18 +477,16 @@ Each different `LEVEL` value uses a different world folder inside `server/data`,
 - `.env`: all runtime configuration
 - `.env.example`: documented environment template
 - `docs`: supplementary setup guides such as voice chat
-- `server/docker-compose.yml`: Docker services for Minecraft and Playit
+- `docker-compose.yml`: Docker services for Minecraft, Playit, and the Discord bot
 - `server/data`: persistent Minecraft files
 - `server/modpacks`: local private/exported modpack files mounted into `/modpacks`
 - `server/playit-data`: persistent Playit agent state
 - `server/backups`: zip backups created from the terminal admin panel
 - `setup_playit.py`: one-time or repeated Playit setup helper
-- `runner.py`: bot entrypoint for direct execution
+- `runner.py`: bot entrypoint used by the Docker bot service
 - `admin_panel.py`: Textual terminal admin panel entrypoint
 - `panel/`: terminal admin panel package
 - `audentity.py`: automated all-up / all-down entrypoint
-- `.audentity/bot.pid`: tracked PID for the background bot process
-- `.audentity/bot.log`: bot output log for background runs
 - `.audentity/panel_audit.log`: audit trail for admin panel actions
 
 ## Where Minecraft Data Is Stored
@@ -508,7 +504,7 @@ That means the Minecraft files are stored in:
 server/data
 ```
 
-If you want to store Minecraft data outside the repository, edit `server/docker-compose.yml`.
+If you want to store Minecraft data outside the repository, edit `docker-compose.yml`.
 
 Example Windows path:
 
