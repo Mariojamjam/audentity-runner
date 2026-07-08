@@ -9,10 +9,10 @@ from pathlib import Path
 from queue import Empty, SimpleQueue
 from typing import Any
 
-import docker
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header, Static, TabbedContent, TabPane
 
+from audentity import bot_status, start_bot_message, stop_bot_message
 from bot.config import load_config
 from bot.docker_manager import DockerManager
 from bot.playit_client import PlayitClient
@@ -28,6 +28,7 @@ from panel.screens.players import PlayersScreen
 @dataclass(slots=True)
 class PanelState:
     running: bool = False
+    bot_running: bool = False
     uptime: str = "Offline"
     address: str | None = None
     players: list[PlayerEntry] = field(default_factory=list)
@@ -73,8 +74,11 @@ class PanelServices:
 
     def fetch_overview(self, *, force_address: bool = False) -> dict[str, Any]:
         running = self.docker_manager.is_running()
+        bot_running, bot_state = bot_status()
         return {
             "running": running,
+            "bot_running": bot_running,
+            "bot_state": bot_state,
             "address": self.get_tunnel_address(force=force_address) if running else None,
             "uptime": self._uptime_text() if running else "Offline",
         }
@@ -191,6 +195,16 @@ class PanelServices:
         self.audit("stack restart")
         return "Server stack restarted."
 
+    def start_bot(self) -> str:
+        message = start_bot_message()
+        self.audit(f"bot start -> {message}")
+        return message
+
+    def stop_bot(self) -> str:
+        message = stop_bot_message()
+        self.audit(f"bot stop -> {message}")
+        return message
+
     def stream_logs(self, queue: SimpleQueue[ParsedLogLine]) -> None:
         log_path = self.root_dir / "server" / "data" / "logs" / "latest.log"
         position = 0
@@ -255,6 +269,7 @@ class AdminPanelApp(App):
         self._refreshing_overview = False
         self._refreshing_players = False
         self._stack_action_in_progress = False
+        self._bot_action_in_progress = False
         self._log_queue: SimpleQueue[ParsedLogLine] = SimpleQueue()
 
     def compose(self) -> ComposeResult:
@@ -291,6 +306,7 @@ class AdminPanelApp(App):
         try:
             overview = await asyncio.to_thread(self.services.fetch_overview, force_address=force_address)
             self.state.running = overview["running"]
+            self.state.bot_running = overview["bot_running"]
             self.state.uptime = overview["uptime"]
             self.state.address = overview["address"]
             self.state.last_overview_refresh = time.monotonic()
@@ -421,6 +437,25 @@ class AdminPanelApp(App):
             await self.refresh_players(force=True)
         finally:
             self._stack_action_in_progress = False
+
+    async def action_toggle_bot(self) -> None:
+        if self._bot_action_in_progress or self._stack_action_in_progress:
+            self.notify("Another stack or bot action is already running.")
+            return
+
+        self._bot_action_in_progress = True
+        try:
+            if self.state.bot_running:
+                self.notify("Stopping Discord bot...")
+                message = await asyncio.to_thread(self.services.stop_bot)
+            else:
+                self.notify("Starting Discord bot...")
+                message = await asyncio.to_thread(self.services.start_bot)
+
+            self.notify(message)
+            await self.refresh_overview(force_address=True)
+        finally:
+            self._bot_action_in_progress = False
 
     def action_help(self) -> None:
         self.notify(

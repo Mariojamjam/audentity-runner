@@ -80,6 +80,20 @@ Screen {
     margin-bottom: 1;
 }
 
+.bot-action-button {
+    margin-left: 1;
+}
+
+.bot-action-button.bot-action-offline {
+    background: #1D4ED8;
+    color: #EFF6FF;
+}
+
+.bot-action-button.bot-action-online {
+    background: #B45309;
+    color: #FFF7ED;
+}
+
 .panel-box {
     width: 1fr;
     height: 1fr;
