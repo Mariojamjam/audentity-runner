@@ -10,7 +10,7 @@ from bot.playit_client import PlayitClient
 
 ROOT_DIR = Path(__file__).resolve().parent
 ENV_PATH = ROOT_DIR / ".env"
-COMPOSE_FILE = ROOT_DIR / "server" / "docker-compose.yml"
+COMPOSE_FILE = ROOT_DIR / "docker-compose.yml"
 PLAYIT_SERVICE = "playit"
 PLAYIT_CONTAINER = "playit-agent"
 PLAYIT_SETUP_WIZARD_URL = "https://playit.gg/account/setup/wizard/new-account/"

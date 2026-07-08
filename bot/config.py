@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,7 +10,7 @@ from dotenv import dotenv_values, load_dotenv
 ROOT_DIR = Path(__file__).resolve().parent.parent
 BOT_ENV_PATH = ROOT_DIR / ".env"
 SERVER_DIR = ROOT_DIR / "server"
-DEFAULT_COMPOSE_DIR = ROOT_DIR / "server"
+DEFAULT_COMPOSE_DIR = ROOT_DIR
 DEFAULT_DOCKER_SERVICE_NAME = "minecraft"
 DEFAULT_PLAYIT_SERVICE_NAME = "playit"
 DEFAULT_DOCKER_CONTAINER_NAME = "minecraft-server"
@@ -50,7 +51,10 @@ def _parse_authorized_users(raw_value: str | None) -> list[int]:
 def load_config() -> BotConfig:
     load_dotenv(BOT_ENV_PATH)
 
-    values = dotenv_values(BOT_ENV_PATH)
+    values = {
+        **{key: value for key, value in dotenv_values(BOT_ENV_PATH).items() if value is not None},
+        **os.environ,
+    }
 
     return BotConfig(
         discord_token=values.get("DISCORD_TOKEN"),

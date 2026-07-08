@@ -23,7 +23,7 @@ class DockerManager:
         self.container_name = container_name
         self.service_name = service_name
         self.dependent_service_names = dependent_service_names or []
-        self.compose_env_file = self.compose_dir.parent / ".env"
+        self.compose_env_file = self.compose_dir / ".env"
 
     def _compose_command(self, *args: str) -> list[str]:
         return [

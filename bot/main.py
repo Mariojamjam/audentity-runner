@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import discord
+import signal
 from discord.ext import commands
 
 from bot.commands import register_commands
@@ -46,11 +48,52 @@ def create_bot():
     return bot, config
 
 
-def main():
+async def run_bot() -> None:
     bot, config = create_bot()
 
     if not config.discord_token:
         raise SystemExit("ERROR: DISCORD_TOKEN is not configured.")
 
     print("Starting Audentity Runner...")
-    bot.run(config.discord_token)
+
+    loop = asyncio.get_running_loop()
+    shutdown_event = asyncio.Event()
+
+    def request_shutdown() -> None:
+        if shutdown_event.is_set():
+            return
+        print("Shutdown signal received. Closing Discord bot...")
+        shutdown_event.set()
+
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            loop.add_signal_handler(sig, request_shutdown)
+        except NotImplementedError:
+            signal.signal(sig, lambda *_args: request_shutdown())
+
+    bot_task = asyncio.create_task(bot.start(config.discord_token))
+    wait_task = asyncio.create_task(shutdown_event.wait())
+
+    try:
+        done, _pending = await asyncio.wait(
+            {bot_task, wait_task},
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+
+        if wait_task in done and not bot_task.done():
+            await bot.close()
+            await bot_task
+        elif bot_task in done:
+            await bot_task
+    finally:
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            try:
+                loop.remove_signal_handler(sig)
+            except NotImplementedError:
+                signal.signal(sig, signal.SIG_DFL)
+        if not bot.is_closed():
+            await bot.close()
+
+
+def main():
+    asyncio.run(run_bot())

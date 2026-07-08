@@ -1,9 +1,11 @@
+name: server
+
 services:
   minecraft:
     image: itzg/minecraft-server
     container_name: minecraft-server
     env_file:
-      - ../.env
+      - ./.env
     environment:
       REPLACE_ENV_DURING_SYNC: "true"
       CFG_VOICE_CHAT_PORT: "${VOICE_CHAT_PORT:-24454}"
@@ -13,10 +15,10 @@ services:
       - "25575:25575"
       - "${VOICE_CHAT_PORT:-24454}:${VOICE_CHAT_PORT:-24454}/udp"
     volumes:
-      # Alternativa fora do repo: D:/minecraft-data:/data
-      - ./data:/data
-      - ./config:/config:ro
-      - ./modpacks:/modpacks:ro
+      # Alternative outside the repo: D:/minecraft-data:/data
+      - ./server/data:/data
+      - ./server/config:/config:ro
+      - ./server/modpacks:/modpacks:ro
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -30,3 +32,19 @@ services:
       - minecraft
     environment:
       - SECRET_KEY=${PLAYIT_SECRET_KEY}
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    container_name: audentity-bot
+    working_dir: /app
+    command: ["python", "runner.py"]
+    env_file:
+      - ./.env
+    environment:
+      RCON_HOST: minecraft
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
