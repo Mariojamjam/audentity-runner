@@ -10,6 +10,7 @@ services:
     volumes:
       # Alternativa fora do repo: D:/minecraft-data:/data
       - ./data:/data
+      - ./modpacks:/modpacks:ro
     stdin_open: true
     tty: true
     restart: unless-stopped

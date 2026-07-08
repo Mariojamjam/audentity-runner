@@ -27,6 +27,7 @@ server-runner-bot/
 |- panel/                Terminal admin panel package
 |- server/
 |  |- data/              Persistent Minecraft data
+|  |- modpacks/          Private/exported modpack files
 |  `- docker-compose.yml Docker stack
 |- .env                  Runtime configuration
 |- .env.example          Documented environment template
@@ -388,17 +389,49 @@ After everything is up, test:
 - `!R:restart`
 - `!R:commands`
 
-## Mods
+## Mods And Modpacks
 
-Yes, this setup supports mods.
+This project supports 4 import paths:
 
-Choose the correct server loader in `.env`, for example:
+1. Public CurseForge modpacks
+2. Public Modrinth modpacks
+3. Private or exported packs (`.zip` or `.mrpack`)
+4. Loose manual mods
+
+The full source of truth is the commented modpack section in [.env.example](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/.env.example:1). Use that file as the reference for which variables to enable.
+
+For loader-based setups, choose the correct server loader in `.env`, for example:
 
 - `TYPE=NEOFORGE`
 - `TYPE=FABRIC`
 - `TYPE=FORGE`
 
-The mods directory is:
+### Public CurseForge modpacks
+
+Use the `AUTO_CURSEFORGE` recipe from `.env.example`.
+
+- Requires `CF_API_KEY`
+- Requires `CF_SLUG`
+- Uses the built-in import support from `itzg/minecraft-server`
+
+### Public Modrinth modpacks
+
+Use the `MODRINTH` recipe from `.env.example`.
+
+- No API key required
+- Set `MODRINTH_MODPACK` to the slug, project ID, or URL
+
+### Private or exported packs
+
+Use [server/modpacks](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/server/modpacks:1).
+
+- Put exported CurseForge `.zip` files or Modrinth `.mrpack` files there
+- Reference them from `.env` with container paths such as `/modpacks/your-pack.zip`
+- CurseForge `.zip` imports still require `CF_API_KEY`
+
+### Loose manual mods
+
+The loose mods directory is:
 
 - [server/data/mods](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/server/data/mods:1)
 
@@ -408,12 +441,24 @@ Other important persistent folders are usually:
 - [server/data/world](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/server/data/world:1)
 - [server/data/logs](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/server/data/logs:1)
 
-Basic mod workflow:
+Basic loose-mod workflow:
 
 1. Choose the right `TYPE` in `.env`
 2. Start the server once
 3. Put the mod `.jar` files into `server/data/mods`
 4. Restart the server
+
+### World Safety With LEVEL
+
+Changing modpacks, loaders, or Minecraft versions on an existing world can make the save incompatible.
+
+To test a new modpack safely, set `LEVEL` in `.env` to a separate world name, for example:
+
+```env
+LEVEL=modpack-test-1
+```
+
+Each different `LEVEL` value uses a different world folder inside `server/data`, so you can validate a new pack before moving it to your main world.
 
 ## What Each File Is For
 
@@ -421,6 +466,7 @@ Basic mod workflow:
 - `.env.example`: documented environment template
 - `server/docker-compose.yml`: Docker services for Minecraft and Playit
 - `server/data`: persistent Minecraft files
+- `server/modpacks`: local private/exported modpack files mounted into `/modpacks`
 - `server/playit-data`: persistent Playit agent state
 - `server/backups`: zip backups created from the terminal admin panel
 - `setup_playit.py`: one-time or repeated Playit setup helper

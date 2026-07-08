@@ -1,5 +1,7 @@
 .env
 .audentity/
 server/data/
+server/modpacks/*
+!server/modpacks/.gitkeep
 __pycache__/
 *.pyc
