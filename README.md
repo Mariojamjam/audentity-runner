@@ -24,6 +24,7 @@ Repository structure:
 ```text
 server-runner-bot/
 |- bot/                  Python bot code
+|- docs/                 Supplementary setup guides
 |- panel/                Terminal admin panel package
 |- server/
 |  |- data/              Persistent Minecraft data
@@ -398,6 +399,8 @@ This project supports 4 import paths:
 3. Private or exported packs (`.zip` or `.mrpack`)
 4. Loose manual mods
 
+The full setup guide for every supported modpack and mod workflow is in [docs/modpacks.md](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/docs/modpacks.md:1).
+
 The full source of truth is the commented modpack section in [.env.example](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/.env.example:1). Use that file as the reference for which variables to enable.
 
 For loader-based setups, choose the correct server loader in `.env`, for example:
@@ -448,6 +451,17 @@ Basic loose-mod workflow:
 3. Put the mod `.jar` files into `server/data/mods`
 4. Restart the server
 
+### Voice Chat
+
+Simple Voice Chat is supported as an optional feature.
+
+- The mod must be installed manually in `server/data/mods`
+- The Docker stack exposes the UDP voice chat port through `.env`
+- A separate Playit UDP tunnel is required for voice chat
+- `voice_host` can be managed automatically from `.env` on startup
+
+The full walkthrough is in [docs/voice.md](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/docs/voice.md:1).
+
 ### World Safety With LEVEL
 
 Changing modpacks, loaders, or Minecraft versions on an existing world can make the save incompatible.
@@ -464,6 +478,7 @@ Each different `LEVEL` value uses a different world folder inside `server/data`,
 
 - `.env`: all runtime configuration
 - `.env.example`: documented environment template
+- `docs`: supplementary setup guides such as voice chat
 - `server/docker-compose.yml`: Docker services for Minecraft and Playit
 - `server/data`: persistent Minecraft files
 - `server/modpacks`: local private/exported modpack files mounted into `/modpacks`
@@ -521,8 +536,9 @@ volumes:
 - `!R:whitelist <player>` adds a player to the whitelist
 - `!R:commands` shows the help message
 
-## Notes
+## Documentation
 
-- Set `PLAYIT_TUNNEL_ADDRESS` to the public address shown in Playit's `Tunnels` tab after you create the tunnel.
-- The bot and terminal panel can still fall back to the running Playit agent when needed.
-- The Playit container shares the Minecraft container network namespace with `network_mode: "service:minecraft"`.
+Additional setup guides are kept in the `docs/` directory:
+
+- [docs/modpacks.md](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/docs/modpacks.md:1) - how to configure public modpacks, local archives, manual server packs, and loose mods
+- [docs/voice.md](/C:/Users/Pichau/Documents/PastaJam/Codigo/server-runner/server-runner-bot/docs/voice.md:1) - how to enable in-game voice chat
