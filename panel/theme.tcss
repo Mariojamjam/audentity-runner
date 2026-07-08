@@ -1,0 +1,146 @@
+Screen {
+    background: #0C0E14;
+    color: #E5E7EB;
+}
+
+#main-grid {
+    layout: vertical;
+}
+
+#tab-strip {
+    dock: top;
+    height: 3;
+    background: #161925;
+    padding: 0 1;
+}
+
+#tab-strip Button {
+    margin-right: 1;
+}
+
+#status-line {
+    dock: top;
+    height: 1;
+    background: #161925;
+    color: #E5E7EB;
+    padding: 0 1;
+}
+
+#footer-hint {
+    dock: bottom;
+    height: 1;
+    background: #161925;
+    color: #6B7280;
+    padding: 0 1;
+}
+
+.screen-view {
+    padding: 1 2;
+}
+
+.screen-title {
+    color: #F472B6;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+.section-title {
+    color: #7C3AED;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#dashboard-grid {
+    grid-size: 2 2;
+    grid-gutter: 1 2;
+    margin-bottom: 1;
+}
+
+.status-card {
+    background: #161925;
+    border: round #7C3AED;
+    padding: 1;
+    min-height: 7;
+}
+
+.status-card-title {
+    color: #F472B6;
+    text-style: bold;
+}
+
+.status-card-body {
+    color: #E5E7EB;
+}
+
+.action-row,
+.player-actions-row,
+.filter-row,
+.confirm-actions {
+    height: auto;
+    margin-bottom: 1;
+}
+
+.panel-box {
+    width: 1fr;
+    height: 1fr;
+    background: #161925;
+    border: round #7C3AED;
+    padding: 1;
+}
+
+#players-layout {
+    height: 1fr;
+}
+
+#players-list,
+#logs-output,
+#console-output {
+    height: 1fr;
+    background: #0C0E14;
+    border: round #6B7280;
+}
+
+#players-list {
+    padding: 0;
+}
+
+.player-row {
+    height: 1;
+    min-height: 1;
+    padding: 0;
+    margin: 0;
+}
+
+.player-row-label {
+    width: 1fr;
+    height: 1;
+    padding: 0 1;
+    margin: 0;
+}
+
+#console-input,
+#players-input {
+    margin-top: 1;
+}
+
+#confirm-modal {
+    width: 60;
+    height: auto;
+    background: #161925;
+    border: round #EF4444;
+    padding: 1 2;
+}
+
+.confirm-title {
+    color: #F472B6;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+.confirm-message {
+    margin-bottom: 1;
+}
+
+.hint {
+    color: #6B7280;
+}
