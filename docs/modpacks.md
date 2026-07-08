@@ -99,7 +99,9 @@ CF_SLUG=pack-slug
 Notes:
 
 - `CF_SLUG` is the modpack slug from the CurseForge URL.
-- `CF_API_KEY` is required by the CurseForge API.
+- `CF_API_KEY` is required by the CurseForge API because the automatic CurseForge workflow does not use a pre-extracted server pack. Instead, the container asks CurseForge for modpack metadata and download information so it can resolve and install the pack during startup.
+- Create the key in the CurseForge Console: [https://console.curseforge.com/](https://console.curseforge.com/)
+- In practice, Audentity Runner only needs `CF_API_KEY` for CurseForge-based automatic import flows. It is not needed for public Modrinth packs, local `.mrpack` files, manual server packs extracted into `server/data`, or loose standalone mods.
 - If the API key contains `$`, write each dollar sign as `$$` in `.env`.
 
 Example:
@@ -196,7 +198,7 @@ CF_MODPACK_ZIP=/modpacks/name-of-your-pack.zip
 
 ### Important requirements
 
-- `CF_API_KEY` is still required.
+- `CF_API_KEY` is still required because the container still uses the CurseForge API even though the archive file is local.
 - The archive must be a CurseForge-style import archive.
 - The archive must contain a valid CurseForge manifest that the image can parse.
 
