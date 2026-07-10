@@ -472,6 +472,8 @@ LEVEL=modpack-test-1
 
 Each different `LEVEL` value uses a different world folder inside `server/data`, so you can validate a new pack before moving it to your main world.
 
+If you change `LEVEL`, you are selecting a different save folder. If that folder already exists, the server reuses it. If it does not exist yet, Minecraft creates a brand new world with that name.
+
 ## What Each File Is For
 
 - `.env`: all runtime configuration

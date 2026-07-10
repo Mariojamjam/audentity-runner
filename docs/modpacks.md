@@ -53,6 +53,8 @@ Examples:
 
 Use a different `LEVEL` when testing a new pack so you do not risk your main save.
 
+Changing `LEVEL` is the same as selecting a different save folder. If the folder exists already, the server reuses it. If it does not exist, a new world is generated with that folder name.
+
 Example:
 
 ```env

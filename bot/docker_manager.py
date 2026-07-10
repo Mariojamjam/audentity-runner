@@ -96,25 +96,6 @@ class DockerManager:
                     return source
         return None
 
-    def _expected_minecraft_data_source(self) -> str | None:
-        host_root = self._discover_host_project_root()
-        if not host_root:
-            return None
-        return self._join_host_path(host_root, "server", "data")
-
-    def _stack_uses_expected_host_paths(self, containers) -> bool:
-        expected_data_source = self._expected_minecraft_data_source()
-        if not expected_data_source:
-            return True
-
-        for container in containers:
-            if container.name != self.container_name:
-                continue
-            for mount in container.attrs.get("Mounts", []):
-                if mount.get("Destination") == "/data":
-                    return mount.get("Source") == expected_data_source
-        return True
-
     @staticmethod
     def _join_host_path(root: str, *parts: str) -> str:
         if re.match(r"^[A-Za-z]:\\", root):
@@ -145,6 +126,7 @@ class DockerManager:
                 f"      - {self._quote_yaml(self._join_host_path(host_root, 'server', 'data') + ':/data')}",
                 f"      - {self._quote_yaml(self._join_host_path(host_root, 'server', 'config') + ':/config:ro')}",
                 f"      - {self._quote_yaml(self._join_host_path(host_root, 'server', 'modpacks') + ':/modpacks:ro')}",
+                f"      - {self._quote_yaml(self._join_host_path(host_root, 'server', 'scripts') + ':/scripts:ro')}",
                 "  bot:",
                 "    volumes:",
                 f"      - {self._quote_yaml(host_root + ':/app')}",
@@ -181,37 +163,27 @@ class DockerManager:
             handle.close()
 
     def start(self):
-        containers = self._get_service_containers()
-        if containers is not None and self._stack_uses_expected_host_paths(containers):
-            try:
-                for container in containers:
-                    container.reload()
-                    if container.status != "running":
-                        container.start()
-            except APIError as exc:
-                raise DockerManagerError(f"Failed to start the stack: {exc.explanation}") from exc
-        else:
-            override_path = None
-            try:
-                command, override_path = self._compose_command_with_host_override("up", "-d", *self._service_names())
-                subprocess.run(
-                    command,
-                    cwd=self.compose_dir,
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
-            except FileNotFoundError as exc:
-                raise DockerManagerError("Docker Compose was not found in PATH.") from exc
-            except subprocess.CalledProcessError as exc:
-                detail = exc.stderr.strip() or exc.stdout.strip() or str(exc)
-                raise DockerManagerError(f"Failed to start the stack: {detail}") from exc
-            finally:
-                if override_path:
-                    try:
-                        os.unlink(override_path)
-                    except OSError:
-                        pass
+        override_path = None
+        try:
+            command, override_path = self._compose_command_with_host_override("up", "-d", *self._service_names())
+            subprocess.run(
+                command,
+                cwd=self.compose_dir,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError as exc:
+            raise DockerManagerError("Docker Compose was not found in PATH.") from exc
+        except subprocess.CalledProcessError as exc:
+            detail = exc.stderr.strip() or exc.stdout.strip() or str(exc)
+            raise DockerManagerError(f"Failed to start the stack: {detail}") from exc
+        finally:
+            if override_path:
+                try:
+                    os.unlink(override_path)
+                except OSError:
+                    pass
 
         container = self.get_container()
         if container is None:
@@ -223,14 +195,33 @@ class DockerManager:
         if containers is None:
             return False
 
+        override_path = None
         try:
-            for container in reversed(containers):
-                container.reload()
-                if container.status == "running":
-                    container.stop(timeout=timeout)
+            command, override_path = self._compose_command_with_host_override(
+                "stop",
+                "-t",
+                str(timeout),
+                *self._service_names(),
+            )
+            subprocess.run(
+                command,
+                cwd=self.compose_dir,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             return True
-        except APIError as exc:
-            raise DockerManagerError(f"Failed to stop the stack: {exc.explanation}") from exc
+        except FileNotFoundError as exc:
+            raise DockerManagerError("Docker Compose was not found in PATH.") from exc
+        except subprocess.CalledProcessError as exc:
+            detail = exc.stderr.strip() or exc.stdout.strip() or str(exc)
+            raise DockerManagerError(f"Failed to stop the stack: {detail}") from exc
+        finally:
+            if override_path:
+                try:
+                    os.unlink(override_path)
+                except OSError:
+                    pass
 
     def is_running(self) -> bool:
         container = self.get_container()

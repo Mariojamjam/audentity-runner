@@ -4,9 +4,11 @@ services:
   minecraft:
     image: itzg/minecraft-server
     container_name: minecraft-server
+    entrypoint: ["/bin/sh", "/scripts/minecraft-start-wrapper.sh"]
     env_file:
       - ./.env
     environment:
+      OVERRIDE_SERVER_PROPERTIES: "true"
       REPLACE_ENV_DURING_SYNC: "true"
       CFG_VOICE_CHAT_PORT: "${VOICE_CHAT_PORT:-24454}"
       CFG_VOICE_CHAT_TUNNEL_ADDRESS: "${VOICE_CHAT_TUNNEL_ADDRESS:-}"
@@ -19,6 +21,7 @@ services:
       - ./server/data:/data
       - ./server/config:/config:ro
       - ./server/modpacks:/modpacks:ro
+      - ./server/scripts:/scripts:ro
     stdin_open: true
     tty: true
     restart: unless-stopped
